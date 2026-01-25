@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  username   String   @unique
+  password   String
+  tenantId   String?  @map("tenant_id")
+  status     String   @default("active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  tokens     RefreshToken[]
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  token      String   @unique
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model TrainingPerformance {
+  id             String   @id @default(uuid())
+  planId         String?  @map("plan_id")
+  planName       String?  @map("plan_name")
+  exerciseName   String?  @map("exercise_name")
+  fileType       String?  @map("file_type")
+  docType        String?  @map("doc_type")
+  newFileType    String?  @map("new_file_type")
+  level          String?
+  exerciseType   String?  @map("exercise_type")
+  exerciseTheme  String?  @map("exercise_theme")
+  collegeCode    String?  @map("college_code")
+  applyNode      String?  @map("apply_node")
+  flowId         String?  @map("flow_id")
+  flowNode       String?  @map("flow_node")
+  delFlg         Int      @default(0) @map("del_flg")
+  activeUser     String?  @map("active_user")
+  scope          String?  @map("scope")
+  fileId         String?  @map("file_id")
+  creationMethod String?  @map("creation_method")
+  description    String?  @db.Text
+  createBy       String?  @map("create_by")
+  createTime     DateTime @default(now()) @map("create_time")
+  updateTime     DateTime @updatedAt @map("update_time")
+  publishStatus  String?  @map("publish_status")
+  visibleScope   String?  @map("visible_scope")
+
+  @@index([planName])
+  @@index([fileType])
+  @@index([applyNode])
+  @@index([createTime])
+}
+
+model TrainingMaterial {
+  id        String   @id @default(uuid())
+  planId    String   @map("plan_id")
+  title     String
+  author    String?
+  content   String   @db.Text
+  publishAt DateTime @default(now()) @map("publish_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([planId])
+  @@index([publishAt])
+}
+
+model ExerciseData {
+  id            String   @id @default(uuid())
+  exerciseName       String?  @map("exercise_name")
+  supportUnit        String?  @map("support_unit")
+  organizer          String?
+  exerciseType       String?  @map("exercise_type")
+  level              String?
+  participatingUnits String?  @map("participating_units")
+  city               String?
+  academy            String?
+  subject            String?
+  course             String?
+  content            String?  @db.Text
+  relatedSystems     String?  @map("related_systems")
+  implPlan           String?  @map("impl_plan") @db.Text
+  groupingInfo       String?  @map("grouping_info") @db.Text
+  keyClasses         String?  @map("key_classes")
+  participantCount   Int?     @map("participant_count")
+  updater            String?
+  startTime          DateTime? @map("start_time")
+  endTime            DateTime? @map("end_time")
+  exerciseTheme      String?  @map("exercise_theme")
+  collegeCode        String?  @map("college_code")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@index([exerciseName])
+  @@index([exerciseType])
+  @@index([level])
+  @@index([academy])
+  @@index([city])
+  @@index([createdAt])
+}
+
+model Template {
+  id            String   @id @default(uuid())
+  templateName  String   @map("template_name")
+  temCategory   String?  @map("tem_category")
+  temSubclass   String?  @map("tem_subclass")
+  temSubName    String?  @map("tem_sub_name")
+  temStatus     String?  @map("tem_status")
+  description   String?  @db.Text
+  elementsItems Json?    @map("elements_items")
+  fileId        String?  @map("file_id")
+  applyNode     String?  @map("apply_node")
+  flowId        String?  @map("flow_id")
+  delFlg        Int      @default(0) @map("del_flg")
+  createBy      String?  @map("create_by")
+  createTime    DateTime @default(now()) @map("create_time")
+  updateTime    DateTime @updatedAt @map("update_time")
+  publishStatus String?  @map("publish_status")
+  visibleScope  String?  @map("visible_scope")
+
+  @@index([templateName])
+  @@index([temCategory])
+  @@index([temSubclass])
+  @@index([createTime])
+}
+
+model ExamRecord {
+  id          String   @id @default(uuid())
+  applyId     String   @map("apply_id")
+  applyType   String   @map("apply_type")
+  examResult  Int?     @map("exam_result")
+  examOpinion String?  @map("exam_opinion")
+  examOffice  String?  @map("exam_office")
+  examUserId  String?  @map("exam_user_id")
+  nextUserId  String?  @map("next_user_id")
+  examOfficeName String? @map("exam_office_name")
+  examNode    String?  @map("exam_node")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([applyId])
+}
+
+model Permission {
+  id        String   @id @default(uuid())
+  bizId     String   @map("biz_id")
+  bizType   String   @map("biz_type")
+  userId    String   @map("user_id")
+  canWrite  Boolean  @default(true) @map("can_write")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([bizId, bizType, userId])
+}
+
+model FileObject {
+  id           String   @id @default(uuid())
+  bucket       String
+  objectKey    String   @map("object_key")
+  originalName String   @map("original_name")
+  mimeType     String   @map("mime_type")
+  size         Int
+  etag         String?
+  uploaderId   String?  @map("uploader_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([objectKey])
+}
+
+model FileOverwriteLog {
+  id           String   @id @default(uuid())
+  fileId       String   @map("file_id")
+  objectKey    String   @map("object_key")
+  originalName String   @map("original_name")
+  mimeType     String   @map("mime_type")
+  size         Int
+  etag         String?
+  uploaderId   String?  @map("uploader_id")
+  replacedAt   DateTime @default(now()) @map("replaced_at")
+
+  @@index([fileId])
+  @@index([replacedAt])
+}
+
+model DictItem {
+  id        String   @id @default(uuid())
+  dictType  String   @map("dict_type")
+  value     String
+  label     String
+  sort      Int      @default(0)
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([dictType])
+}
+
+model TemplateSubclass {
+  id           String   @id @default(uuid())
+  categoryId   String?  @map("category_id")
+  categoryName String   @map("category_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([categoryId])
+}
