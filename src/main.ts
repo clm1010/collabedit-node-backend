@@ -13,6 +13,7 @@ import { fail } from './utils/response.js'
 
 const app = express()
 
+// 【已删除】T-User 响应头配置，改为使用 /api/user/info 接口
 app.use(cors())
 app.use(morgan('dev'))
 app.use(express.json({ limit: '20mb' }))

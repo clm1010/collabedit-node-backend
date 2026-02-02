@@ -27,6 +27,7 @@ export const authGuard = (req: Request, res: Response, next: NextFunction) => {
   try {
     const payload = jwt.verify(token, env.jwtSecret) as AuthPayload
     req.auth = payload
+    // 【已删除】T-User 响应头设置，改为使用 /api/user/info 接口获取用户信息
     return next()
   } catch {
     return fail(res, '未认证', 401)
