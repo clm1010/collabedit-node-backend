@@ -142,6 +142,7 @@ model ExamRecord {
   nextUserId  String?  @map("next_user_id")
   examOfficeName String? @map("exam_office_name")
   examNode    String?  @map("exam_node")
+  auditors    Json?    @map("auditors")
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([applyId])

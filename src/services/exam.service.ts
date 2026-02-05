@@ -8,8 +8,9 @@ export const submitExam = async (payload: {
   applyType: 'training' | 'template'
   comment?: string
   flowId?: string
+  auditors?: Record<string, string[]>
 }) => {
-  const { applyId, applyType, comment, flowId } = payload
+  const { applyId, applyType, comment, flowId, auditors } = payload
   return prisma.$transaction(async (tx) => {
     const record = await tx.examRecord.create({
       data: {
@@ -17,7 +18,8 @@ export const submitExam = async (payload: {
         applyType,
         examResult: 0,
         examOpinion: comment ?? '',
-        examNode: 'submit'
+        examNode: 'submit',
+        auditors: auditors ?? null
       }
     })
 

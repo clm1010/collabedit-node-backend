@@ -62,22 +62,6 @@ router.post('/tbTemplate/TemSubmit', async (_req, res) => {
   return fail(res, '路径有误', 404)
 })
 
-// 提交模板审核。
-router.post('/examRecord/TemSubmit', async (req, res) => {
-  const { id, comment } = req.body ?? {}
-  if (!id) return fail(res, '缺少id', 400)
-  const record = await db.examRecord.create({
-    data: {
-      applyId: id,
-      applyType: 'template',
-      examResult: 0,
-      examOpinion: comment ?? '',
-      examNode: 'submit'
-    }
-  })
-  return ok(res, record)
-})
-
 // 校验模板写作权限。
 router.post('/tbTemplate/getPermissionCheck', async (req, res) => {
   const { id, userId } = req.body ?? {}

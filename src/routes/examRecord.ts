@@ -8,17 +8,17 @@ const router = Router()
 
 // 提交演训审核。
 router.post('/examRecord/submitReview', async (req, res) => {
-  const { id, comment, flowId } = req.body ?? {}
+  const { id, comment, flowId, auditors } = req.body ?? {}
   if (!id) return fail(res, '缺少id', 400)
-  const record = await submitExam({ applyId: id, applyType: 'training', comment, flowId })
+  const record = await submitExam({ applyId: id, applyType: 'training', comment, flowId, auditors })
   return ok(res, record)
 })
 
 // 提交模板审核。
 router.post('/examRecord/TemSubmit', async (req, res) => {
-  const { id, comment, flowId } = req.body ?? {}
+  const { id, comment, flowId, auditors } = req.body ?? {}
   if (!id) return fail(res, '缺少id', 400)
-  const record = await submitExam({ applyId: id, applyType: 'template', comment, flowId })
+  const record = await submitExam({ applyId: id, applyType: 'template', comment, flowId, auditors })
   return ok(res, record)
 })
 

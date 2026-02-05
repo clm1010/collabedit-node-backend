@@ -64,10 +64,16 @@ export const deleteTemplates = async (ids: string[]) => {
 }
 
 // 将模板记录标记为已发布。
-export const publishTemplate = async (data: { id: string; visibleScope?: string }) => {
+export const publishTemplate = async (data: {
+  id: string
+  visibleScope?: string | string[]
+}) => {
+  const scope = Array.isArray(data.visibleScope)
+    ? data.visibleScope.filter(Boolean).join(',')
+    : data.visibleScope ?? ''
   return prisma.template.update({
     where: { id: data.id },
-    data: { publishStatus: 'published', visibleScope: data.visibleScope ?? '' }
+    data: { publishStatus: 'published', visibleScope: scope, applyNode: '4' }
   })
 }
 
