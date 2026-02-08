@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { createHash } from 'crypto'
 import multer from 'multer'
 import { ok, fail } from '../utils/response.js'
 import {
@@ -16,6 +17,11 @@ import { uploadFile, getFileStream } from '../services/file.service.js'
 
 const router = Router()
 const upload = multer({ storage: multer.memoryStorage() })
+
+const isDocStreamDebugEnabled = () =>
+  process.env.DOC_STREAM_DEBUG === '1' ||
+  process.env.DOC_STREAM_DEBUG === 'true' ||
+  process.env.DOC_STREAM_DEBUG === 'yes'
 
 // 分页查询演训记录。
 router.post('/getPlan/getPageList', async (req, res) => {
@@ -89,8 +95,48 @@ router.get('/getPlan/getFileStream', async (req, res) => {
 
   const streamInfo = await getFileStream(plan.fileId)
   if (!streamInfo) return fail(res, '文件不存在', 404)
+  if (isDocStreamDebugEnabled()) {
+    console.info('[doc-stream] training getFileStream', {
+      planId: id,
+      fileId: streamInfo.file.id,
+      objectKey: streamInfo.file.objectKey,
+      mimeType: streamInfo.file.mimeType,
+      size: streamInfo.file.size,
+      etag: streamInfo.file.etag
+    })
+  }
   res.setHeader('Content-Type', streamInfo.file.mimeType)
   res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(streamInfo.file.originalName)}"`)
+  if (isDocStreamDebugEnabled()) {
+    let bytesSent = 0
+    const hash = createHash('sha256')
+    streamInfo.stream.on('data', (chunk: Buffer) => {
+      bytesSent += chunk.length
+      hash.update(chunk)
+    })
+    streamInfo.stream.on('end', () => {
+      console.info('[doc-stream] training stream end', {
+        planId: id,
+        fileId: streamInfo.file.id,
+        bytesSent,
+        sha256: hash.digest('hex')
+      })
+    })
+    streamInfo.stream.on('error', (error: Error) => {
+      console.warn('[doc-stream] training stream error', {
+        planId: id,
+        fileId: streamInfo.file.id,
+        message: error.message
+      })
+    })
+    res.on('close', () => {
+      console.info('[doc-stream] training response closed', {
+        planId: id,
+        fileId: streamInfo.file.id,
+        bytesSent
+      })
+    })
+  }
   streamInfo.stream.pipe(res)
 })
 
