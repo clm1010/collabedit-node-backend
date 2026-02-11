@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Router } from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import { env } from './config/env.js'
@@ -13,22 +13,25 @@ import { fail } from './utils/response.js'
 
 const app = express()
 
-// 【已删除】T-User 响应头配置，改为使用 /api/user/info 接口
 app.use(cors())
 app.use(morgan('dev'))
 app.use(express.json({ limit: '20mb' }))
 app.use(express.urlencoded({ extended: true }))
 
-app.use(authRoutes)
+// ===== 所有路由统一 /api 前缀（与 Java 后端对齐） =====
+const apiRouter = Router()
+// 认证路由（部分无需 authGuard，路由内部自行控制）
+apiRouter.use(authRoutes)
+// 以下路由全部需要认证
+apiRouter.use(tenantGuard)
+apiRouter.use(authGuard)
+apiRouter.use(trainingRoutes)
+apiRouter.use(templateRoutes)
+apiRouter.use(examRoutes)
+apiRouter.use(dictRoutes)
+app.use('/api', apiRouter)
 
-app.use(tenantGuard)
-app.use(authGuard)
-
-app.use(trainingRoutes)
-app.use(templateRoutes)
-app.use(examRoutes)
-app.use(dictRoutes)
-
+// 404 兜底
 app.use((req, res) => {
   return fail(res, `未找到接口: ${req.path}`, 404)
 })

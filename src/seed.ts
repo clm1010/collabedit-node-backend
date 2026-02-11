@@ -71,18 +71,23 @@ const seedTemplateSubclass = async () => {
   }
 }
 
-// 创建本地登录用的默认管理员用户。
+// 创建或更新本地登录用的默认管理员用户（upsert 确保新字段也被填充）。
 const seedUser = async () => {
-  const username = 'admin'
-  const exists = await prisma.user.findUnique({ where: { username } })
-  if (!exists) {
-    await prisma.user.create({
-      data: {
-        username,
-        password: 'admin123'
-      }
-    })
-  }
+  await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: {
+      nickname: '管理员',
+      email: 'admin@collabedit.local',
+      deptId: 'dept-001'
+    },
+    create: {
+      username: 'admin',
+      password: 'admin123',
+      nickname: '管理员',
+      email: 'admin@collabedit.local',
+      deptId: 'dept-001'
+    }
+  })
 }
 
 // 如果不存在则创建演训样例数据。
