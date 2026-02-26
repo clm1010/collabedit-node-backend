@@ -7,28 +7,238 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ===================== 系统管理模型 =====================
+
+// 用户表（改造：id 改 Int 自增，status 改 Int，新增字段）
 model User {
-  id         String   @id @default(uuid())
-  username   String   @unique
-  password   String
-  nickname   String?              // 显示昵称
-  email      String?              // 邮箱
-  avatar     String?              // 头像URL
-  deptId     String?  @map("dept_id")  // 部门ID
-  tenantId   String?  @map("tenant_id")
-  status     String   @default("active")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-  tokens     RefreshToken[]
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  nickname  String? // 显示昵称
+  email     String? // 邮箱
+  mobile    String? // 手机号
+  sex       Int       @default(0) // 0=未知 1=男 2=女
+  avatar    String? // 头像URL
+  deptId    Int?      @map("dept_id") // 部门ID
+  tenantId  Int?      @map("tenant_id") // 租户ID（tenantGuard 使用）
+  status    Int       @default(0) // 0=正常 1=禁用（对齐芋道）
+  loginIp   String?   @map("login_ip")
+  loginDate DateTime? @map("login_date")
+  remark    String?
+  creator   String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  dept      Dept?          @relation(fields: [deptId], references: [id])
+  tokens    RefreshToken[]
+  userRoles UserRole[]
+  userPosts UserPost[]
 }
 
+// 刷新令牌表（改造：userId 改 Int）
 model RefreshToken {
-  id         String   @id @default(uuid())
-  userId     String   @map("user_id")
-  token      String   @unique @db.VarChar(500)
-  expiresAt  DateTime @map("expires_at")
-  createdAt  DateTime @default(now()) @map("created_at")
-  user       User     @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  userId    Int      @map("user_id")
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+// 角色表（新增）
+model Role {
+  id               Int      @id @default(autoincrement())
+  name             String // 角色名称
+  code             String   @unique // 角色编码 如 super_admin
+  sort             Int      @default(0)
+  status           Int      @default(0) // 0=正常 1=禁用
+  type             Int      @default(2) // 1=内置 2=自定义
+  dataScope        Int      @default(1) @map("data_scope") // 1=全部 2=自定义 3=本部门 4=本部门及以下 5=仅本人
+  dataScopeDeptIds String?  @map("data_scope_dept_ids") // JSON 数组字符串
+  remark           String?
+  creator          String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  userRoles UserRole[]
+  roleMenus RoleMenu[]
+}
+
+// 用户-角色关联表（新增）
+model UserRole {
+  id     Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  roleId Int @map("role_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+// 菜单表（新增）
+model Menu {
+  id            Int      @id @default(autoincrement())
+  name          String // 菜单名称
+  permission    String? // 权限标识 如 system:user:query
+  type          Int // 1=目录 2=菜单 3=按钮
+  sort          Int      @default(0)
+  parentId      Int      @default(0) @map("parent_id") // 0=顶级
+  path          String? // 路由路径
+  icon          String? // 图标
+  component     String? // 组件路径 如 system/user/index
+  componentName String?  @map("component_name") // 组件名称
+  status        Int      @default(0) // 0=正常 1=禁用
+  visible       Boolean  @default(true) // 是否可见
+  keepAlive     Boolean  @default(true) @map("keep_alive") // 是否缓存
+  alwaysShow    Boolean  @default(true) @map("always_show") // 是否总是显示
+  creator       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  roleMenus RoleMenu[]
+}
+
+// 角色-菜单关联表（新增）
+model RoleMenu {
+  id     Int @id @default(autoincrement())
+  roleId Int @map("role_id")
+  menuId Int @map("menu_id")
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, menuId])
+}
+
+// 部门表（新增）
+model Dept {
+  id           Int      @id @default(autoincrement())
+  name         String // 部门名称
+  parentId     Int      @default(0) @map("parent_id") // 0=顶级
+  sort         Int      @default(0)
+  leaderUserId Int?     @map("leader_user_id") // 负责人
+  phone        String?
+  email        String?
+  status       Int      @default(0) // 0=正常 1=禁用
+  creator      String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  users User[]
+}
+
+// 岗位表（新增）
+model Post {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique // 岗位编码
+  name      String // 岗位名称
+  sort      Int      @default(0)
+  status    Int      @default(0) // 0=正常 1=禁用
+  remark    String?
+  creator   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userPosts UserPost[]
+}
+
+// 用户-岗位关联表（新增）
+model UserPost {
+  id     Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  postId Int @map("post_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+// 字典类型表（新增）
+model DictType {
+  id        Int      @id @default(autoincrement())
+  name      String // 字典名称
+  type      String   @unique // 字典类型标识
+  status    Int      @default(0) // 0=正常 1=禁用
+  remark    String?
+  creator   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+// 字典数据表（改造：id 改 Int，status 改 Int，新增字段）
+model DictItem {
+  id        Int      @id @default(autoincrement())
+  dictType  String   @map("dict_type") // 关联的字典类型标识
+  value     String // 字典值
+  label     String // 字典标签
+  sort      Int      @default(0)
+  status    Int      @default(0) // 0=正常 1=禁用
+  colorType String?  @map("color_type") // 颜色类型（前端 Tag 用）
+  cssClass  String?  @map("css_class") // CSS 样式
+  remark    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([dictType])
+}
+
+// 操作日志表（新增）
+model OperateLog {
+  id            Int      @id @default(autoincrement())
+  userId        Int?     @map("user_id")
+  userName      String?  @map("user_name")
+  type          String? // 操作类型
+  subType       String?  @map("sub_type")
+  bizId         Int?     @map("biz_id")
+  action        String?  @db.Text // 操作描述
+  extra         String?  @db.Text // 额外信息
+  requestMethod String?  @map("request_method")
+  requestUrl    String?  @map("request_url")
+  userIp        String?  @map("user_ip")
+  userAgent     String?  @map("user_agent") @db.Text
+  creator       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+}
+
+// 登录日志表（新增）
+model LoginLog {
+  id        Int      @id @default(autoincrement())
+  logType   Int?     @map("log_type") // 1=登录 2=登出
+  userId    Int?     @map("user_id")
+  username  String?
+  result    Int? // 0=成功 1=失败
+  userIp    String?  @map("user_ip")
+  userAgent String?  @map("user_agent") @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+}
+
+// 通知公告表（新增）
+model Notice {
+  id        Int      @id @default(autoincrement())
+  title     String
+  type      Int // 1=通知 2=公告
+  content   String   @db.Text
+  status    Int      @default(0) // 0=草稿 1=发布
+  remark    String?
+  creator   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+// ===================== 业务模型（保持不变） =====================
+
+// 业务写作权限表（改造：id 改 Int，userId 改 Int；bizId 仍为 String 因为引用 UUID 业务实体）
+model Permission {
+  id        Int      @id @default(autoincrement())
+  bizId     String   @map("biz_id") // 业务实体ID（UUID）
+  bizType   String   @map("biz_type") // 业务类型 training/template
+  userId    Int      @map("user_id") // 用户ID（改为 Int）
+  canWrite  Boolean  @default(true) @map("can_write")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([bizId, bizType, userId])
 }
 
 model TrainingPerformance {
@@ -78,29 +288,29 @@ model TrainingMaterial {
 }
 
 model ExerciseData {
-  id            String   @id @default(uuid())
-  exerciseName       String?  @map("exercise_name")
-  supportUnit        String?  @map("support_unit")
+  id                 String    @id @default(uuid())
+  exerciseName       String?   @map("exercise_name")
+  supportUnit        String?   @map("support_unit")
   organizer          String?
-  exerciseType       String?  @map("exercise_type")
+  exerciseType       String?   @map("exercise_type")
   level              String?
-  participatingUnits String?  @map("participating_units")
+  participatingUnits String?   @map("participating_units")
   city               String?
   academy            String?
   subject            String?
   course             String?
-  content            String?  @db.Text
-  relatedSystems     String?  @map("related_systems")
-  implPlan           String?  @map("impl_plan") @db.Text
-  groupingInfo       String?  @map("grouping_info") @db.Text
-  keyClasses         String?  @map("key_classes")
-  participantCount   Int?     @map("participant_count")
+  content            String?   @db.Text
+  relatedSystems     String?   @map("related_systems")
+  implPlan           String?   @map("impl_plan") @db.Text
+  groupingInfo       String?   @map("grouping_info") @db.Text
+  keyClasses         String?   @map("key_classes")
+  participantCount   Int?      @map("participant_count")
   updater            String?
   startTime          DateTime? @map("start_time")
   endTime            DateTime? @map("end_time")
-  exerciseTheme      String?  @map("exercise_theme")
-  collegeCode        String?  @map("college_code")
-  createdAt          DateTime @default(now()) @map("created_at")
+  exerciseTheme      String?   @map("exercise_theme")
+  collegeCode        String?   @map("college_code")
+  createdAt          DateTime  @default(now()) @map("created_at")
 
   @@index([exerciseName])
   @@index([exerciseType])
@@ -136,31 +346,20 @@ model Template {
 }
 
 model ExamRecord {
-  id          String   @id @default(uuid())
-  applyId     String   @map("apply_id")
-  applyType   String   @map("apply_type")
-  examResult  Int?     @map("exam_result")
-  examOpinion String?  @map("exam_opinion")
-  examOffice  String?  @map("exam_office")
-  examUserId  String?  @map("exam_user_id")
-  nextUserId  String?  @map("next_user_id")
-  examOfficeName String? @map("exam_office_name")
-  examNode    String?  @map("exam_node")
-  auditors    Json?    @map("auditors")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  applyId        String   @map("apply_id")
+  applyType      String   @map("apply_type")
+  examResult     Int?     @map("exam_result")
+  examOpinion    String?  @map("exam_opinion")
+  examOffice     String?  @map("exam_office")
+  examUserId     String?  @map("exam_user_id")
+  nextUserId     String?  @map("next_user_id")
+  examOfficeName String?  @map("exam_office_name")
+  examNode       String?  @map("exam_node")
+  auditors       Json?    @map("auditors")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   @@index([applyId])
-}
-
-model Permission {
-  id        String   @id @default(uuid())
-  bizId     String   @map("biz_id")
-  bizType   String   @map("biz_type")
-  userId    String   @map("user_id")
-  canWrite  Boolean  @default(true) @map("can_write")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([bizId, bizType, userId])
 }
 
 model FileObject {
@@ -190,18 +389,6 @@ model FileOverwriteLog {
 
   @@index([fileId])
   @@index([replacedAt])
-}
-
-model DictItem {
-  id        String   @id @default(uuid())
-  dictType  String   @map("dict_type")
-  value     String
-  label     String
-  sort      Int      @default(0)
-  status    String   @default("active")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([dictType])
 }
 
 model TemplateSubclass {

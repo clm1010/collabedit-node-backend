@@ -72,7 +72,7 @@ router.post('/tbTemplate/TemSubmit', async (_req, res) => {
 router.post('/tbTemplate/getPermissionCheck', async (req, res) => {
   const { id, userId } = req.body ?? {}
   if (!id || !userId) return fail(res, '缺少参数', 400)
-  const result = await checkWritePermission(id, 'template', userId)
+  const result = await checkWritePermission(id, 'template', Number(userId))
   return ok(res, result)
 })
 
@@ -140,7 +140,8 @@ router.post('/tbTemplate/saveFile', upload.single('file'), async (req, res) => {
     const tpl = await prisma.template.findUnique({ where: { id } })
     existingFileId = tpl?.fileId ?? undefined
   }
-  const record = await uploadFile(file, (req as any).auth?.userId, existingFileId)
+  const rawUserId = (req as any).auth?.userId
+  const record = await uploadFile(file, rawUserId != null ? String(rawUserId) : undefined, existingFileId)
   if (id) {
     await prisma.template.update({
       where: { id },

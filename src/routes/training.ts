@@ -54,7 +54,7 @@ router.post('/getPlan/publishData', async (req, res) => {
 router.post('/getPlan/getPermissionCheck', async (req, res) => {
   const { id, userId } = req.body ?? {}
   if (!id || !userId) return fail(res, '缺少参数', 400)
-  const result = await checkWritePermission(id, 'training', userId)
+  const result = await checkWritePermission(id, 'training', Number(userId))
   return ok(res, result)
 })
 
@@ -150,7 +150,8 @@ router.post('/getPlan/saveFile', upload.single('file'), async (req, res) => {
     const plan = await prisma.trainingPerformance.findUnique({ where: { id } })
     existingFileId = plan?.fileId ?? undefined
   }
-  const record = await uploadFile(file, (req as any).auth?.userId, existingFileId)
+  const rawUserId = (req as any).auth?.userId
+  const record = await uploadFile(file, rawUserId != null ? String(rawUserId) : undefined, existingFileId)
   if (id) {
     await prisma.trainingPerformance.update({
       where: { id },

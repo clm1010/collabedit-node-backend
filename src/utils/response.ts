@@ -7,7 +7,7 @@ export type ApiResponse<T> = {
 }
 
 export const ok = <T>(res: Response, data: T, msg = 'success') => {
-  const payload: ApiResponse<T> = { code: 200, data, msg }
+  const payload: ApiResponse<T> = { code: 0, data, msg }
   return res.json(payload)
 }
 

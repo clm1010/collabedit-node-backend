@@ -19,7 +19,7 @@ export const submitExam = async (payload: {
         examResult: 0,
         examOpinion: comment ?? '',
         examNode: 'submit',
-        auditors: auditors ?? null
+        auditors: auditors ?? undefined
       }
     })
 
