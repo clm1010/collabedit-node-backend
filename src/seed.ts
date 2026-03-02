@@ -222,7 +222,11 @@ const seedDictTypes = async () => {
     { name: '登录结果', type: 'system_login_result', status: 0, remark: '登录结果' },
     { name: '登录类型', type: 'system_login_type', status: 0, remark: '登录类型' },
     { name: '通知类型', type: 'system_notice_type', status: 0, remark: '通知公告类型' },
-    { name: '文件类型', type: 'FILE_TYPE', status: 0, remark: '业务文件类型' }
+    { name: '文件类型', type: 'tb_file_type', status: 0, remark: '业务文件类型' },
+    { name: '演训等级', type: 'tb_level_type', status: 0, remark: '演训等级' },
+    { name: '所属学院', type: 'tb_academy_type', status: 0, remark: '所属学院' },
+    { name: '演训类型', type: 'tb_exercise_type', status: 0, remark: '演训类型' },
+    { name: '演训城市', type: 'tb_city_type', status: 0, remark: '演训城市' }
   ]
   for (const t of types) {
     await prisma.dictType.upsert({
@@ -265,20 +269,58 @@ const seedDictItems = async () => {
     // 通知类型
     { dictType: 'system_notice_type', value: '1', label: '通知', sort: 0 },
     { dictType: 'system_notice_type', value: '2', label: '公告', sort: 1 },
-    // 文件类型（保留原有业务字典）
-    { dictType: 'FILE_TYPE', value: 'ZCQB', label: '侦察情报', sort: 0 },
-    { dictType: 'FILE_TYPE', value: 'QTLA', label: '企图立案', sort: 1 },
-    { dictType: 'FILE_TYPE', value: 'ZZJH', label: '作战计划', sort: 2 },
-    { dictType: 'FILE_TYPE', value: 'YXFA', label: '演训方案', sort: 3 },
-    { dictType: 'FILE_TYPE', value: 'ZZWS', label: '作战文书', sort: 4 },
-    { dictType: 'FILE_TYPE', value: 'DDJH', label: '导调计划', sort: 5 },
-    { dictType: 'FILE_TYPE', value: 'ZJZB', label: '战绩战报', sort: 6 },
-    { dictType: 'FILE_TYPE', value: 'ZZXT', label: '作战想定', sort: 7 },
-    { dictType: 'FILE_TYPE', value: 'ZJBG', label: '总结报告', sort: 8 },
-    { dictType: 'FILE_TYPE', value: 'TZ', label: '通知', sort: 9 },
-    { dictType: 'FILE_TYPE', value: 'TG', label: '通告', sort: 10 },
-    { dictType: 'FILE_TYPE', value: 'PGJG', label: '评估结果', sort: 11 },
-    { dictType: 'FILE_TYPE', value: 'QT', label: '其它', sort: 12 }
+    // tb_file_type 文档分类
+    { dictType: 'tb_file_type', value: 'ZCQB', label: '侦察情报', sort: 1 },
+    { dictType: 'tb_file_type', value: 'QTLA', label: '企图立案', sort: 2 },
+    { dictType: 'tb_file_type', value: 'ZZJH', label: '作战计划', sort: 3 },
+    { dictType: 'tb_file_type', value: 'YXFA', label: '演训方案', sort: 4 },
+    { dictType: 'tb_file_type', value: 'ZZWS', label: '作战文书', sort: 5 },
+    { dictType: 'tb_file_type', value: 'DDJH', label: '导调计划', sort: 6 },
+    { dictType: 'tb_file_type', value: 'ZJZB', label: '战绩战报', sort: 7 },
+    { dictType: 'tb_file_type', value: 'ZZXT', label: '作战想定', sort: 8 },
+    { dictType: 'tb_file_type', value: 'ZJBG', label: '总结报告', sort: 9 },
+    { dictType: 'tb_file_type', value: 'TZ', label: '通知', sort: 10 },
+    { dictType: 'tb_file_type', value: 'TG', label: '通告', sort: 11 },
+    { dictType: 'tb_file_type', value: 'PGJG', label: '评估结果', sort: 12 },
+    { dictType: 'tb_file_type', value: 'QT', label: '其它', sort: 13 },
+    // tb_level_type 演训等级
+    { dictType: 'tb_level_type', value: '1', label: '战术级', sort: 1 },
+    { dictType: 'tb_level_type', value: '2', label: '战役级', sort: 2 },
+    { dictType: 'tb_level_type', value: '3', label: '战略级', sort: 3 },
+    // tb_academy_type 所属学院
+    { dictType: 'tb_academy_type', value: 'GFDX', label: '国防大学', sort: 1 },
+    { dictType: 'tb_academy_type', value: 'LHZZ', label: '联合作战学院', sort: 2 },
+    { dictType: 'tb_academy_type', value: 'GJAQ', label: '国家安全学院', sort: 3 },
+    { dictType: 'tb_academy_type', value: 'JSGL', label: '军事管理学院', sort: 4 },
+    { dictType: 'tb_academy_type', value: 'ZZ', label: '政治学院', sort: 5 },
+    { dictType: 'tb_academy_type', value: 'LHQW', label: '联合勤务学院', sort: 6 },
+    { dictType: 'tb_academy_type', value: 'JSWH', label: '军事文化学院', sort: 7 },
+    { dictType: 'tb_academy_type', value: 'GJFW', label: '国际防务学院', sort: 8 },
+    { dictType: 'tb_academy_type', value: 'YJSY', label: '研究生院', sort: 9 },
+    // tb_exercise_type 演训类型
+    { dictType: 'tb_exercise_type', value: '1', label: '政治类', sort: 1 },
+    { dictType: 'tb_exercise_type', value: '2', label: '作战类', sort: 2 },
+    { dictType: 'tb_exercise_type', value: '3', label: '战略类', sort: 3 },
+    { dictType: 'tb_exercise_type', value: '4', label: '联合类', sort: 4 },
+    { dictType: 'tb_exercise_type', value: '5', label: '文化类', sort: 5 },
+    { dictType: 'tb_exercise_type', value: '6', label: '经济类', sort: 6 },
+    { dictType: 'tb_exercise_type', value: '7', label: '后勤装备类', sort: 7 },
+    { dictType: 'tb_exercise_type', value: '8', label: '大学年度演训', sort: 8 },
+    { dictType: 'tb_exercise_type', value: '9', label: '认知类', sort: 9 },
+    { dictType: 'tb_exercise_type', value: '10', label: '后装类', sort: 10 },
+    { dictType: 'tb_exercise_type', value: '11', label: '国际防务类', sort: 11 },
+    { dictType: 'tb_exercise_type', value: '12', label: '网络类', sort: 12 },
+    { dictType: 'tb_exercise_type', value: '13', label: '电磁类', sort: 13 },
+    { dictType: 'tb_exercise_type', value: '14', label: '太空类', sort: 14 },
+    { dictType: 'tb_exercise_type', value: '15', label: '管理类', sort: 15 },
+    { dictType: 'tb_exercise_type', value: '16', label: '情报类', sort: 16 },
+    { dictType: 'tb_exercise_type', value: '17', label: '国防动员类', sort: 17 },
+    // tb_city_type 演训城市
+    { dictType: 'tb_city_type', value: 'BJ', label: '北京', sort: 1 },
+    { dictType: 'tb_city_type', value: 'SH', label: '上海', sort: 2 },
+    { dictType: 'tb_city_type', value: 'SJZ', label: '石家庄', sort: 3 },
+    { dictType: 'tb_city_type', value: 'XA', label: '西安', sort: 4 },
+    { dictType: 'tb_city_type', value: 'NJ', label: '南京', sort: 5 }
   ]
   for (const item of items) {
     const exists = await prisma.dictItem.findFirst({
@@ -292,39 +334,11 @@ const seedDictItems = async () => {
 
 // ===================== 业务种子数据（保留原有） =====================
 
-const templateSubclass = [
-  { category_id: 'ZCQB', category_name: '侦察情报' },
-  { category_id: 'QTLA', category_name: '企图立案' },
-  { category_id: 'ZZJH', category_name: '作战计划' },
-  { category_id: 'YXFA', category_name: '演训方案' },
-  { category_id: 'ZZWS', category_name: '作战文书' },
-  { category_id: 'DTJH', category_name: '导调计划' },
-  { category_id: 'ZZXD', category_name: '作战想定' },
-  { category_id: 'ZJZG', category_name: '战绩战报' },
-  { category_id: 'ZJBG', category_name: '总结报告' },
-  { category_id: 'TZ', category_name: '通知' },
-  { category_id: 'TG', category_name: '通告' },
-  { category_id: 'PGJG', category_name: '评估结果' }
-]
-
-const seedTemplateSubclass = async () => {
-  for (const item of templateSubclass) {
-    const exists = await prisma.templateSubclass.findFirst({
-      where: { categoryId: item.category_id, categoryName: item.category_name }
-    })
-    if (!exists) {
-      await prisma.templateSubclass.create({
-        data: { categoryId: item.category_id, categoryName: item.category_name }
-      })
-    }
-  }
-}
-
 const seedTrainingSamples = async () => {
   const samples = [
-    { planName: '演训方案示例A', exerciseName: '联合演训A', fileType: 'YXFA', docType: 'MD', level: '1', exerciseType: '1', applyNode: '1', createBy: 'admin', collegeCode: 'COL001', exerciseTheme: '联合防卫', flowId: 'flow-001', flowNode: 'node-1', scope: 'all', description: '演训方案样例数据' },
-    { planName: '演训方案示例B', exerciseName: '联合演训B', fileType: 'ZZWS', docType: 'MD', level: '2', exerciseType: '2', applyNode: '3', createBy: 'admin', collegeCode: 'COL002', exerciseTheme: '信息支援', flowId: 'flow-002', flowNode: 'node-2', scope: 'all', description: '已审核通过样例' },
-    { planName: '演训方案示例C', exerciseName: '实兵演训C', fileType: 'ZZJH', docType: 'MD', level: '3', exerciseType: '3', applyNode: '4', createBy: 'admin', collegeCode: 'COL003', exerciseTheme: '联合作战', flowId: 'flow-003', flowNode: 'node-3', scope: 'all', description: '发布态样例（可预览）' }
+    { planName: '演训方案示例A', exerciseName: '联合演训A', fileType: 'YXFA', docType: 'MD', level: '3', exerciseType: '8', applyNode: '1', createBy: 'admin', collegeCode: 'GFDX', exerciseTheme: '联合防卫', flowId: 'flow-001', flowNode: 'node-1', scope: 'all', description: '演训方案样例数据' },
+    { planName: '演训方案示例B', exerciseName: '联合演训B', fileType: 'ZZWS', docType: 'MD', level: '2', exerciseType: '4', applyNode: '3', createBy: 'admin', collegeCode: 'LHZZ', exerciseTheme: '信息支援', flowId: 'flow-002', flowNode: 'node-2', scope: 'all', description: '已审核通过样例' },
+    { planName: '演训方案示例C', exerciseName: '实兵演训C', fileType: 'ZZJH', docType: 'MD', level: '1', exerciseType: '2', applyNode: '4', createBy: 'admin', collegeCode: 'GJAQ', exerciseTheme: '联合作战', flowId: 'flow-003', flowNode: 'node-3', scope: 'all', description: '发布态样例（可预览）' }
   ]
   for (const sample of samples) {
     const exist = await prisma.trainingPerformance.findFirst({ where: { planName: sample.planName } })
@@ -350,8 +364,8 @@ const seedTrainingMaterials = async () => {
 
 const seedExerciseData = async () => {
   const samples = [
-    { exerciseName: '联合演训-东部战区', supportUnit: '后勤保障部', organizer: '联合作战学院', exerciseType: 'LHL', level: 'ZYJ', participatingUnits: '陆军、海军、空军', city: '南京', academy: 'LHZZXY', subject: '联合作战', course: '指挥协同', content: '围绕联合作战体系进行指挥协同演练。', relatedSystems: '指控系统、态势系统', implPlan: '第一阶段筹划、第二阶段实施、第三阶段评估。', groupingInfo: '红蓝对抗编组', keyClasses: '指挥班', participantCount: 120, updater: 'admin', startTime: new Date('2026-01-10'), endTime: new Date('2026-01-20'), exerciseTheme: '体系联训', collegeCode: 'LHZZXY' },
-    { exerciseName: '年度演训-综合保障', supportUnit: '综合保障部', organizer: '联合勤务学院', exerciseType: 'DXNDYX', level: 'ZLJ', participatingUnits: '保障部队', city: '北京', academy: 'LHQWXY', subject: '保障协同', course: '后勤支援', content: '保障资源统筹与协同指挥演练。', relatedSystems: '保障系统', implPlan: '方案编制、资源调度、复盘总结。', groupingInfo: '保障编组', keyClasses: '保障班', participantCount: 80, updater: 'admin', startTime: new Date('2026-02-05'), endTime: new Date('2026-02-12'), exerciseTheme: '综合保障', collegeCode: 'LHQWXY' }
+    { exerciseName: '联合演训-东部战区', supportUnit: '后勤保障部', organizer: '联合作战学院', exerciseType: '4', level: '2', participatingUnits: '陆军、海军、空军', city: 'NJ', academy: 'LHZZ', subject: '联合作战', course: '指挥协同', content: '围绕联合作战体系进行指挥协同演练。', relatedSystems: '指控系统、态势系统', implPlan: '第一阶段筹划、第二阶段实施、第三阶段评估。', groupingInfo: '红蓝对抗编组', keyClasses: '指挥班', participantCount: 120, updater: 'admin', startTime: new Date('2026-01-10'), endTime: new Date('2026-01-20'), exerciseTheme: '体系联训', collegeCode: 'LHZZ' },
+    { exerciseName: '年度演训-综合保障', supportUnit: '综合保障部', organizer: '联合勤务学院', exerciseType: '8', level: '3', participatingUnits: '保障部队', city: 'BJ', academy: 'LHQW', subject: '保障协同', course: '后勤支援', content: '保障资源统筹与协同指挥演练。', relatedSystems: '保障系统', implPlan: '方案编制、资源调度、复盘总结。', groupingInfo: '保障编组', keyClasses: '保障班', participantCount: 80, updater: 'admin', startTime: new Date('2026-02-05'), endTime: new Date('2026-02-12'), exerciseTheme: '综合保障', collegeCode: 'LHQW' }
   ]
   for (const sample of samples) {
     const exist = await prisma.exerciseData.findFirst({ where: { exerciseName: sample.exerciseName } })
@@ -425,8 +439,6 @@ const main = async () => {
   console.log('  [OK] 字典数据')
 
   console.log('--- 业务数据 ---')
-  await seedTemplateSubclass()
-  console.log('  [OK] 模板子类')
   await seedTrainingSamples()
   console.log('  [OK] 演训样例')
   await seedTrainingMaterials()

@@ -103,7 +103,7 @@ export const getExerciseData = async (query: ExerciseQuery) => {
   if (query.exerciseType) where.exerciseType = query.exerciseType
   if (query.level) where.level = query.level
   if (query.academy) where.academy = query.academy
-  if (query.city) where.city = { contains: query.city }
+  if (query.city) where.city = query.city
 
   const [total, list] = await Promise.all([
     prisma.exerciseData.count({ where }),

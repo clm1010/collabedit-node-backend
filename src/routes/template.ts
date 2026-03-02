@@ -30,16 +30,6 @@ router.post('/tbTemplate/getPageList', async (req, res) => {
   return ok(res, data)
 })
 
-// 获取模板子类列表。
-router.get('/tbTemplate/getTemTypeData', async (_req, res) => {
-  const list = await db.templateSubclass.findMany({ orderBy: { createdAt: 'desc' } })
-  const mapped = list.map((item) => ({
-    category_id: item.categoryId ?? '',
-    category_name: item.categoryName
-  }))
-  return ok(res, mapped)
-})
-
 // 新增模板。
 router.post('/tbTemplate/savaTemplate', async (req, res) => {
   const payload = req.body ?? {}

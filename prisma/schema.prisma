@@ -390,12 +390,3 @@ model FileOverwriteLog {
   @@index([fileId])
   @@index([replacedAt])
 }
-
-model TemplateSubclass {
-  id           String   @id @default(uuid())
-  categoryId   String?  @map("category_id")
-  categoryName String   @map("category_name")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  @@index([categoryId])
-}

@@ -7,7 +7,7 @@ import { listDict } from '../services/dict.service.js'
 const router = Router()
 
 // 按类型获取字典项列表。
-router.get('/dict/list', async (req, res) => {
+router.get('/sjrh/dict/dataList', async (req, res) => {
   const dictType = String(req.query.dictType ?? '')
   if (!dictType) return fail(res, '缺少dictType', 400)
   const data = await listDict(dictType)
