@@ -246,8 +246,8 @@ router.get('/user/info', authGuard, async (req, res) => {
 
 // ===== 模拟 Java 接口（本地测试用） =====
 
-// 模拟 Java 刷新 Token 接口（Java 后端只接受 GET）
-router.get('/sjrh/permission/refreshToken', async (req, res) => {
+// 模拟 Java 刷新 Token 接口（GET 为 Java 标准，POST 为防御性兼容前端误配）
+const handleSjrhRefreshToken = async (req: any, res: any) => {
   const refreshToken = String(req.query.refreshToken ?? '')
   if (!refreshToken) {
     return fail(res, '缺少刷新令牌', 400)
@@ -257,7 +257,9 @@ router.get('/sjrh/permission/refreshToken', async (req, res) => {
     return fail(res, '无效的刷新令牌', 401)
   }
   return ok(res, tokens)
-})
+}
+router.get('/sjrh/permission/refreshToken', handleSjrhRefreshToken)
+router.post('/sjrh/permission/refreshToken', handleSjrhRefreshToken)
 
 // 模拟 Java 获取权限接口
 router.get('/sjrh/permission/getPermission', authGuard, async (req, res) => {
