@@ -125,6 +125,7 @@ router.post('/tbTemplate/saveFile', upload.single('file'), async (req, res) => {
   const file = req.file
   if (!file) return fail(res, '缺少文件', 400)
   const id = req.body?.id
+  const fileType = req.body?.fileType
   let existingFileId: string | undefined
   if (id) {
     const tpl = await prisma.template.findUnique({ where: { id } })
@@ -135,7 +136,7 @@ router.post('/tbTemplate/saveFile', upload.single('file'), async (req, res) => {
   if (id) {
     await prisma.template.update({
       where: { id },
-      data: { fileId: record.id }
+      data: { fileId: record.id, ...(fileType ? { fileType } : {}) }
     })
   }
   return ok(res, { fileId: record.id })

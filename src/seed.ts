@@ -377,9 +377,9 @@ const seedExerciseData = async () => {
 
 const seedTemplateSamples = async () => {
   const samples = [
-    { templateName: '作战命令模板', temCategory: '筹划文档', temSubclass: 'ZZWS', temSubName: '作战文书', temStatus: '0', applyNode: '3', createBy: 'admin', flowId: 'flow-t-001', description: '模板样例数据', elementsItems: [{ item_type: 'text', item_label: '发文单位' }, { item_type: 'time', item_label: '签发时间' }] },
-    { templateName: '演训方案模板', temCategory: '筹划文档', temSubclass: 'YXFA', temSubName: '演训方案', temStatus: '0', applyNode: '2', createBy: 'admin', flowId: 'flow-t-002', description: '审核中样例', elementsItems: [{ item_type: 'text', item_label: '演训地点' }] },
-    { templateName: '发布预览模板', temCategory: '筹划文档', temSubclass: 'ZZJH', temSubName: '作战计划', temStatus: '0', applyNode: '4', createBy: 'admin', flowId: 'flow-t-003', description: '发布态样例（可预览）', elementsItems: [{ item_type: 'text', item_label: '任务代号' }] }
+    { templateName: '作战命令模板', temCategory: '筹划文档', temSubclass: 'ZZWS', fileType: 'ZZWS', temSubName: '作战文书', temStatus: '0', applyNode: '3', createBy: 'admin', flowId: 'flow-t-001', description: '模板样例数据', elementsItems: [{ item_type: 'text', item_label: '发文单位' }, { item_type: 'time', item_label: '签发时间' }] },
+    { templateName: '演训方案模板', temCategory: '筹划文档', temSubclass: 'YXFA', fileType: 'YXFA', temSubName: '演训方案', temStatus: '0', applyNode: '2', createBy: 'admin', flowId: 'flow-t-002', description: '审核中样例', elementsItems: [{ item_type: 'text', item_label: '演训地点' }] },
+    { templateName: '发布预览模板', temCategory: '筹划文档', temSubclass: 'ZZJH', fileType: 'ZZJH', temSubName: '作战计划', temStatus: '0', applyNode: '4', createBy: 'admin', flowId: 'flow-t-003', description: '发布态样例（可预览）', elementsItems: [{ item_type: 'text', item_label: '任务代号' }] }
   ]
   for (const sample of samples) {
     const exist = await prisma.template.findFirst({ where: { templateName: sample.templateName } })

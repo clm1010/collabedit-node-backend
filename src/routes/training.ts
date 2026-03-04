@@ -145,6 +145,7 @@ router.post('/getPlan/saveFile', upload.single('file'), async (req, res) => {
   const file = req.file
   if (!file) return fail(res, '缺少文件', 400)
   const id = req.body?.id
+  const fileType = req.body?.fileType
   let existingFileId: string | undefined
   if (id) {
     const plan = await prisma.trainingPerformance.findUnique({ where: { id } })
@@ -155,7 +156,7 @@ router.post('/getPlan/saveFile', upload.single('file'), async (req, res) => {
   if (id) {
     await prisma.trainingPerformance.update({
       where: { id },
-      data: { fileId: record.id }
+      data: { fileId: record.id, ...(fileType ? { fileType } : {}) }
     })
   }
   return ok(res, { fileId: record.id })

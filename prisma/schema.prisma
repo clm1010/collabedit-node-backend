@@ -325,6 +325,7 @@ model Template {
   templateName  String   @map("template_name")
   temCategory   String?  @map("tem_category")
   temSubclass   String?  @map("tem_subclass")
+  fileType      String?  @map("file_type")
   temSubName    String?  @map("tem_sub_name")
   temStatus     String?  @map("tem_status")
   description   String?  @db.Text
