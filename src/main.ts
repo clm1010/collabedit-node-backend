@@ -12,6 +12,7 @@ import authRoutes from './routes/auth.js'
 import trainingRoutes from './routes/training.js'
 import templateRoutes from './routes/template.js'
 import examRoutes from './routes/examRecord.js'
+import fileRoutes from './routes/file.js'
 import dictRoutes from './routes/dict.js'
 // 系统管理路由
 import systemDeptRoutes from './routes/system/dept.js'
@@ -42,6 +43,7 @@ apiRouter.use(authGuard)
 apiRouter.use(trainingRoutes)
 apiRouter.use(templateRoutes)
 apiRouter.use(examRoutes)
+apiRouter.use(fileRoutes)
 apiRouter.use(dictRoutes)
 // 系统管理路由（内部自行控制 requirePermission）
 apiRouter.use(systemDeptRoutes)

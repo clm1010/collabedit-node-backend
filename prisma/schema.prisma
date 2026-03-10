@@ -274,19 +274,6 @@ model TrainingPerformance {
   @@index([createTime])
 }
 
-model TrainingMaterial {
-  id        String   @id @default(uuid())
-  planId    String   @map("plan_id")
-  title     String
-  author    String?
-  content   String   @db.Text
-  publishAt DateTime @default(now()) @map("publish_at")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([planId])
-  @@index([publishAt])
-}
-
 model ExerciseData {
   id                 String    @id @default(uuid())
   exerciseName       String?   @map("exercise_name")
@@ -390,4 +377,18 @@ model FileOverwriteLog {
 
   @@index([fileId])
   @@index([replacedAt])
+}
+
+model Material {
+  id           String   @id @default(uuid())
+  title        String
+  content      String?  @db.Text
+  fileType     String?  @map("file_type")
+  delFlg       Int      @default(0) @map("del_flg")
+  createBy     String?  @map("create_by")
+  createTime   DateTime @default(now()) @map("create_time")
+  updateTime   DateTime @updatedAt @map("update_time")
+
+  @@index([fileType])
+  @@index([createTime])
 }

@@ -348,20 +348,6 @@ const seedTrainingSamples = async () => {
   }
 }
 
-const seedTrainingMaterials = async () => {
-  const trainings = await prisma.trainingPerformance.findMany()
-  for (const plan of trainings) {
-    const existing = await prisma.trainingMaterial.findFirst({ where: { planId: plan.id } })
-    if (existing) continue
-    await prisma.trainingMaterial.createMany({
-      data: [
-        { planId: plan.id, title: `${plan.planName ?? '演训方案'}参考素材-任务背景`, author: plan.createBy ?? 'admin', content: '<p>本素材用于说明演训任务背景与总体目标。</p>' },
-        { planId: plan.id, title: `${plan.planName ?? '演训方案'}参考素材-组织结构`, author: plan.createBy ?? 'admin', content: '<p>本素材提供组织结构示例。</p>' }
-      ]
-    })
-  }
-}
-
 const seedExerciseData = async () => {
   const samples = [
     { exerciseName: '联合演训-东部战区', supportUnit: '后勤保障部', organizer: '联合作战学院', exerciseType: '4', level: '2', participatingUnits: '陆军、海军、空军', city: 'NJ', academy: 'LHZZ', subject: '联合作战', course: '指挥协同', content: '围绕联合作战体系进行指挥协同演练。', relatedSystems: '指控系统、态势系统', implPlan: '第一阶段筹划、第二阶段实施、第三阶段评估。', groupingInfo: '红蓝对抗编组', keyClasses: '指挥班', participantCount: 120, updater: 'admin', startTime: new Date('2026-01-10'), endTime: new Date('2026-01-20'), exerciseTheme: '体系联训', collegeCode: 'LHZZ' },
@@ -414,6 +400,43 @@ const seedExamRecords = async () => {
   }
 }
 
+const seedMaterials = async () => {
+  const materials = [
+    // YXFA 演训方案
+    { title: '联合作战演练任务背景', fileType: 'YXFA', createBy: 'admin', content: '本素材用于说明联合作战演练的任务背景与总体目标，包含参演力量编成、演练地域范围等基础信息。演练将在东部战区辖区内展开，涵盖陆海空三军联合行动。' },
+    { title: '演训方案组织结构模板', fileType: 'YXFA', createBy: 'admin', content: '<h3>组织结构</h3><p>本次演练采用<strong>红蓝对抗</strong>模式，参演力量包括：</p><ul><li>红方：合成旅战斗群</li><li>蓝方：模拟假想敌分队</li></ul><p>演练重点检验<em>联合指挥</em>与<em>协同作战</em>能力。</p>' },
+    { title: '演练总体筹划要点', fileType: 'YXFA', createBy: 'staff_b', content: '<h3>筹划要点</h3><ol><li>明确演练目的和科目设置</li><li>拟定参演力量及编组方案</li><li>确定演练时间与地域</li><li>制定安全保障预案</li></ol><p>筹划工作应于演练前<strong>30天</strong>完成，经逐级审批后下达。</p>' },
+    { title: '年度演训计划编制说明', fileType: 'YXFA', createBy: 'admin', content: '年度演训计划应包含演练名称、参演单位、时间节点、保障需求等核心要素。编制过程中需结合上级训练大纲要求，统筹安排各阶段训练内容。' },
+
+    // ZZJH 作战计划
+    { title: '作战计划编写规范', fileType: 'ZZJH', createBy: 'staff_a', content: '<h3>编写规范</h3><p>作战计划应包含以下要素：</p><table><tr><th>章节</th><th>内容</th></tr><tr><td>敌情判断</td><td>敌方兵力部署、可能行动方向</td></tr><tr><td>我方态势</td><td>己方编成、战斗序列</td></tr><tr><td>任务区分</td><td>各部队作战任务及协同关系</td></tr><tr><td>保障计划</td><td>后勤、装备、通信保障</td></tr></table>' },
+    { title: '合同战斗计划要素', fileType: 'ZZJH', createBy: 'admin', content: '合同战斗计划核心要素：战斗编成、任务区分、协同动作、火力计划、工程保障、后勤保障、通信保障、指挥关系。每个要素需明确责任单位和时间节点。' },
+    { title: '防御作战计划参考', fileType: 'ZZJH', createBy: 'staff_b', content: '<p>防御作战计划应重点包含：</p><ul><li><strong>阵地编成</strong>：主阵地、前沿阵地、预备阵地</li><li><strong>火力配置</strong>：直射火力、间接火力、反坦克火力</li><li><strong>障碍设置</strong>：雷场、壕沟、铁丝网</li><li><strong>反冲击计划</strong>：预备队使用时机和方向</li></ul>' },
+
+    // DDJH 导调计划
+    { title: '导调工作基本流程', fileType: 'DDJH', createBy: 'admin', content: '<h3>导调流程</h3><ol><li><strong>导调准备</strong>：拟定导调方案，明确导调人员分工</li><li><strong>情况诱导</strong>：按时序发放态势信息</li><li><strong>裁决评判</strong>：依据交战规则进行实时裁决</li><li><strong>讲评总结</strong>：梳理问题，总结经验教训</li></ol>' },
+    { title: '导调文书编写指南', fileType: 'DDJH', createBy: 'staff_a', content: '导调文书包括：导调方案、情况想定、导调日志、裁决记录、讲评报告。文书编写应做到时间精确、内容详实、格式规范，确保导调活动有据可查。' },
+    { title: '导调情况想定示例', fileType: 'DDJH', createBy: 'admin', content: '<p>XX时XX分，蓝方在我防御正面实施<strong>佯攻</strong>，主力向我左翼迂回。</p><p>导调要求：红方指挥员需在<em>15分钟内</em>判明蓝方意图并调整部署。考核重点：情报研判能力、指挥决策速度。</p>' },
+
+    // ZZWS 作战文书
+    { title: '作战命令格式规范', fileType: 'ZZWS', createBy: 'admin', content: '<h3>作战命令格式</h3><p>标准作战命令包含五个部分：</p><ol><li>敌情</li><li>任务</li><li>执行（各分队任务）</li><li>保障</li><li>指挥与通信</li></ol><p>命令应简明扼要，避免歧义，使用规范军语。</p>' },
+    { title: '战斗文书签发流程', fileType: 'ZZWS', createBy: 'staff_a', content: '战斗文书签发流程：拟稿→核稿→签发→登记→分发→签收。紧急文书可先口头下达后补签书面文书。所有文书须编号存档，非密文书保存期限不少于5年。' },
+    { title: '协同动作计划要素', fileType: 'ZZWS', createBy: 'staff_b', content: '<p>协同动作计划应明确：</p><ul><li>协同目标与方法</li><li>火力协同时序表</li><li>各分队动作衔接点</li><li>联络信号与暗语</li></ul><p>重点确保<strong>时间协同</strong>和<strong>空间协同</strong>的统一。</p>' },
+
+    // QTLA 企图立案
+    { title: '企图判断分析方法', fileType: 'QTLA', createBy: 'admin', content: '企图判断需综合运用情报分析、态势研判、兵棋推演等手段。重点分析敌方兵力调动、后勤保障变化、通信活动异常等征候，形成多种可能行动方案的概率评估。' },
+    { title: '立案报告编写标准', fileType: 'QTLA', createBy: 'staff_a', content: '<h3>立案报告结构</h3><ol><li><strong>背景概述</strong>：阐述任务背景及当面敌情</li><li><strong>企图分析</strong>：列出敌方可能行动方案（最危险/最可能）</li><li><strong>我方对策</strong>：针对各方案拟定应对措施</li><li><strong>建议方案</strong>：推荐最优行动方案并说明理由</li></ol>' },
+    { title: '态势研判报告模板', fileType: 'QTLA', createBy: 'admin', content: '<p>态势研判报告应包含：</p><ul><li>战场环境分析（地形、气象、电磁）</li><li>敌我力量对比</li><li>关键时间节点预判</li><li>态势发展趋势评估</li></ul><p>报告结论需给出<strong>置信度等级</strong>（高/中/低）。</p>' }
+  ]
+
+  for (const item of materials) {
+    const exists = await prisma.material.findFirst({ where: { title: item.title, fileType: item.fileType ?? undefined } })
+    if (!exists) {
+      await prisma.material.create({ data: item })
+    }
+  }
+}
+
 // ===================== 执行全部初始化 =====================
 const main = async () => {
   console.log('--- 系统管理数据 ---')
@@ -441,14 +464,14 @@ const main = async () => {
   console.log('--- 业务数据 ---')
   await seedTrainingSamples()
   console.log('  [OK] 演训样例')
-  await seedTrainingMaterials()
-  console.log('  [OK] 演训素材')
   await seedExerciseData()
   console.log('  [OK] 演训选择器')
   await seedTemplateSamples()
   console.log('  [OK] 模板样例')
   await seedExamRecords()
   console.log('  [OK] 审核记录')
+  await seedMaterials()
+  console.log('  [OK] 参考素材')
 }
 
 main()

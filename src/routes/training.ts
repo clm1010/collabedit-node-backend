@@ -58,27 +58,6 @@ router.post('/getPlan/getPermissionCheck', async (req, res) => {
   return ok(res, result)
 })
 
-// 获取参考素材列表。
-router.post('/getPlan/getMaterial', async (req, res) => {
-  const { id } = req.body ?? {}
-  if (!id) return fail(res, '缺少id', 400)
-
-  const materials = await prisma.trainingMaterial.findMany({
-    where: { planId: String(id) },
-    orderBy: { publishAt: 'desc' }
-  })
-
-  const mapped = materials.map((item) => ({
-    id: item.id,
-    title: item.title,
-    date: item.publishAt.toISOString(),
-    author: item.author ?? '未知',
-    content: item.content
-  }))
-
-  return ok(res, mapped)
-})
-
 // 下载演训文件流。
 router.get('/getPlan/getFileStream', async (req, res) => {
   const id = String(req.query.id ?? '')
