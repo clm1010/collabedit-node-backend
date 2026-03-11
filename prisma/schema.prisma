@@ -380,14 +380,23 @@ model FileOverwriteLog {
 }
 
 model Material {
-  id           String   @id @default(uuid())
-  title        String
-  content      String?  @db.Text
-  fileType     String?  @map("file_type")
-  delFlg       Int      @default(0) @map("del_flg")
-  createBy     String?  @map("create_by")
-  createTime   DateTime @default(now()) @map("create_time")
-  updateTime   DateTime @updatedAt @map("update_time")
+  id               String   @id @default(uuid())
+  deleted          Int      @default(0)
+  creator          String?
+  createTime       DateTime @default(now()) @map("create_time")
+  updater          String?
+  updateTime       DateTime @updatedAt @map("update_time")
+  fileName         String   @map("file_name")
+  fileType         String?  @map("file_type")
+  contentType      String?  @map("content_type")
+  pathType         String?  @map("path_type")
+  filePath         String?  @map("file_path") @db.Text
+  fileIntroduction String?  @map("file_introduction")
+  fileContent      String?  @map("file_content") @db.Text
+  oldPathType      String?  @map("old_path_type")
+  oldFilePath      String?  @map("old_file_path") @db.Text
+  fileTypeLabel    String?  @map("file_type_label")
+  contentTypeName  String?  @map("content_type_name")
 
   @@index([fileType])
   @@index([createTime])

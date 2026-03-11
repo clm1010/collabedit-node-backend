@@ -7,7 +7,7 @@ const router = Router()
 router.post('/file/page', async (req, res) => {
   const { fileTypeList, pageNo, pageSize } = req.body ?? {}
 
-  const where: any = { delFlg: 0 }
+  const where: any = { deleted: 0 }
 
   if (fileTypeList) {
     const types = Array.isArray(fileTypeList) ? fileTypeList : [fileTypeList]
@@ -26,14 +26,14 @@ router.post('/file/page', async (req, res) => {
       }),
       prisma.material.count({ where })
     ])
-    return ok(res, { records: list, total })
+    return ok(res, { dataFileVoList: list, size: Number(pageSize), total })
   }
 
   const list = await prisma.material.findMany({
     where,
     orderBy: { createTime: 'desc' }
   })
-  return ok(res, { records: list, total: list.length })
+  return ok(res, { dataFileVoList: list, size: list.length, total: list.length })
 })
 
 export default router
