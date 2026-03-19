@@ -87,6 +87,8 @@ router.get('/tbTemplate/getFileStream', async (req, res) => {
   }
   res.setHeader('Content-Type', streamInfo.file.mimeType)
   res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(streamInfo.file.originalName)}"`)
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+  res.setHeader('Pragma', 'no-cache')
   if (isDocStreamDebugEnabled()) {
     let bytesSent = 0
     const hash = createHash('sha256')

@@ -1,0 +1,54 @@
+---
+description: Express 路由与服务层编码规范。修改路由或服务文件时自动加载。
+globs: src/routes/**, src/services/**
+---
+
+# 路由与服务层规范
+
+## 路由
+
+- 用 `Router()` 创建，`export default router` 导出
+- 路径写完整（如 `/system/user/page`），在 `main.ts` 的 `apiRouter` 下统一加 `/api` 前缀
+- 权限用 `requirePermission('module:resource:action')`
+
+## 响应格式
+
+```typescript
+import { ok, fail } from '../../utils/response.js'
+
+// 成功：{ code: 200, data: T, message: "success" }
+ok(res, data)
+
+// 失败：{ code: 500, data: null, message: string }
+fail(res, '错误信息')
+fail(res, '未认证', 401)
+```
+
+## Service 层
+
+- 对象形式导出：`export const xxxService = { ... }`
+- 使用 Prisma 做数据访问
+- Service 层直接 `throw new Error()`，路由层 try-catch 后调用 `fail()`
+
+## 分页
+
+```typescript
+import { parsePage, pageResult } from '../../utils/pagination.js'
+const { skip, take } = parsePage(req)
+return ok(res, pageResult(list, total))
+```
+
+## 树形数据
+
+```typescript
+import { buildTree } from '../../utils/tree.js'
+// 泛型约束：{ id; parentId; children? }
+const tree = buildTree(flatList)
+```
+
+## 文件上传
+
+- `multer.memoryStorage()` + `upload.single('file')`
+- 存储由 `file.service.ts` 封装 MinIO 操作
+- 文件路径格式：`YYYY-MM-DD/{fileId}{ext}`
+- 中文文件名用 `fixFilename()` 处理 Latin-1 -> UTF-8 编码

@@ -1,0 +1,36 @@
+---
+description: Prisma 模型定义规范。修改 schema 或 seed 文件时自动加载。
+globs: prisma/**
+---
+
+# Prisma 模型规范
+
+## 命名
+
+- 模型名：PascalCase（`User`、`TrainingPerformance`）
+- 数据库列：snake_case，用 `@map("column_name")` 映射
+- 外键：`{关联模型}Id` + `@map("{关联模型}_id")`
+
+## 必备字段
+
+```prisma
+model Example {
+  id        Int      @id @default(autoincrement())  // 或 String @default(uuid())
+  // ... 业务字段 ...
+  status    Int      @default(0)                    // 0=正常，1=禁用
+  delFlg    Int      @default(0) @map("del_flg")    // 软删除
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+```
+
+## 迁移
+
+- 使用 `prisma db push`（非 `prisma migrate`），无版本化迁移目录
+- 生产环境慎用 `--force-reset`
+
+## Seed
+
+- Seed 数据在 `src/seed.ts`，运行 `pnpm seed`
+- 按模块拆分函数：`seedDepts` -> `seedRoles` -> `seedUsers` -> ...
+- 使用 `upsert`（`where` + `create` + `update`）保证幂等
