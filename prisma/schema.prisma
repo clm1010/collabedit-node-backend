@@ -260,6 +260,9 @@ model TrainingPerformance {
   activeUser     String?  @map("active_user")
   scope          String?  @map("scope")
   fileId         String?  @map("file_id")
+  originalFileId String?  @map("original_file_id")
+  contentFileId  String?  @map("content_file_id")
+  docMetadataId  String?  @map("doc_metadata_id")
   creationMethod String?  @map("creation_method")
   description    String?  @db.Text
   createBy       String?  @map("create_by")
@@ -318,6 +321,8 @@ model Template {
   description   String?  @db.Text
   elementsItems Json?    @map("elements_items")
   fileId        String?  @map("file_id")
+  originalFileId String? @map("original_file_id")
+  contentFileId  String? @map("content_file_id")
   applyNode     String?  @map("apply_node")
   flowId        String?  @map("flow_id")
   delFlg        Int      @default(0) @map("del_flg")
@@ -400,4 +405,26 @@ model Material {
 
   @@index([fileType])
   @@index([createTime])
+}
+
+model DocumentMetadata {
+  id              String   @id @default(uuid())
+  documentId      String   @unique @map("document_id")
+  paperWidth      Float?   @map("paper_width")
+  paperHeight     Float?   @map("paper_height")
+  marginTop       Float?   @map("margin_top")
+  marginBottom    Float?   @map("margin_bottom")
+  marginLeft      Float?   @map("margin_left")
+  marginRight     Float?   @map("margin_right")
+  defaultFont     String?  @map("default_font")
+  defaultFontSize Float?   @map("default_font_size")
+  headersJson     String?  @map("headers_json") @db.Text
+  footersJson     String?  @map("footers_json") @db.Text
+  sectionsJson    String?  @map("sections_json") @db.Text
+  numberingJson   String?  @map("numbering_json") @db.Text
+  stylesJson      String?  @map("styles_json") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("document_metadata")
 }

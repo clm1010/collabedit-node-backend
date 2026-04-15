@@ -61,8 +61,11 @@ router.post('/tbTemplate/TemSubmit', async (_req, res) => {
 // 校验模板写作权限。
 router.post('/tbTemplate/getPermissionCheck', async (req, res) => {
   const { id, userId } = req.body ?? {}
-  if (!id || !userId) return fail(res, '缺少参数', 400)
-  const result = await checkWritePermission(id, 'template', Number(userId))
+  const bodyUserId = Number(userId)
+  const authUserId = Number((req as any).auth?.userId)
+  const parsedUserId = Number.isFinite(bodyUserId) ? bodyUserId : authUserId
+  if (!id || !Number.isFinite(parsedUserId)) return fail(res, '缺少参数', 400)
+  const result = await checkWritePermission(String(id), 'template', parsedUserId)
   return ok(res, result)
 })
 

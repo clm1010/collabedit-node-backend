@@ -53,21 +53,48 @@ router.post('/getPlan/publishData', async (req, res) => {
 // 校验写作权限。
 router.post('/getPlan/getPermissionCheck', async (req, res) => {
   const { id, userId } = req.body ?? {}
-  if (!id || !userId) return fail(res, '缺少参数', 400)
-  const result = await checkWritePermission(id, 'training', Number(userId))
+  const bodyUserId = Number(userId)
+  const authUserId = Number((req as any).auth?.userId)
+  const parsedUserId = Number.isFinite(bodyUserId) ? bodyUserId : authUserId
+  if (!id || !Number.isFinite(parsedUserId)) return fail(res, '缺少参数', 400)
+  const result = await checkWritePermission(String(id), 'training', parsedUserId)
   return ok(res, result)
 })
 
-// 下载演训文件流。
+// 下载演训文件流（支持 JSON 新格式和 DOCX 旧格式）。
 router.get('/getPlan/getFileStream', async (req, res) => {
   const id = String(req.query.id ?? '')
   if (!id) return fail(res, '缺少id', 400)
 
   const plan = await prisma.trainingPerformance.findUnique({ where: { id } })
-  
-  // 如果记录不存在或没有关联文件，返回空响应（新建的空文档）
+
+  // prefer=content 时优先返回 JSON 格式的内容文件
+  const preferContent = req.query.prefer === 'content'
+
+  // 优先尝试 contentFileId（新格式 JSON）
+  if (preferContent && plan?.contentFileId) {
+    const streamInfo = await getFileStream(plan.contentFileId)
+    if (streamInfo) {
+      if (isDocStreamDebugEnabled()) {
+        console.info('[doc-stream] training getFileStream (content JSON)', {
+          planId: id,
+          fileId: streamInfo.file.id,
+          objectKey: streamInfo.file.objectKey,
+          mimeType: streamInfo.file.mimeType,
+          size: streamInfo.file.size,
+        })
+      }
+      res.setHeader('Content-Type', 'application/json')
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(streamInfo.file.originalName)}"`)
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+      res.setHeader('Pragma', 'no-cache')
+      streamInfo.stream.pipe(res)
+      return
+    }
+  }
+
+  // 降级到 fileId（旧格式 DOCX）
   if (!plan?.fileId) {
-    // 返回空内容，不报错（前端会识别为空文档）
     res.status(204).end()
     return
   }
@@ -127,18 +154,31 @@ router.post('/getPlan/saveFile', upload.single('file'), async (req, res) => {
   if (!file) return fail(res, '缺少文件', 400)
   const id = req.body?.id
   const fileType = req.body?.fileType
+  const saveAs = req.body?.saveAs // 'content' 表示存为 contentFileId（JSON 日常保存）
+
   let existingFileId: string | undefined
   if (id) {
     const plan = await prisma.trainingPerformance.findUnique({ where: { id } })
-    existingFileId = plan?.fileId ?? undefined
+    if (saveAs === 'content') {
+      existingFileId = plan?.contentFileId ?? undefined
+    } else {
+      existingFileId = plan?.fileId ?? undefined
+    }
   }
   const rawUserId = (req as any).auth?.userId
   const record = await uploadFile(file, rawUserId != null ? String(rawUserId) : undefined, existingFileId)
   if (id) {
-    await prisma.trainingPerformance.update({
-      where: { id },
-      data: { fileId: record.id, ...(fileType ? { fileType } : {}) }
-    })
+    if (saveAs === 'content') {
+      await prisma.trainingPerformance.update({
+        where: { id },
+        data: { contentFileId: record.id, ...(fileType ? { fileType } : {}) }
+      })
+    } else {
+      await prisma.trainingPerformance.update({
+        where: { id },
+        data: { fileId: record.id, ...(fileType ? { fileType } : {}) }
+      })
+    }
   }
   return ok(res, { fileId: record.id })
 })
@@ -148,6 +188,141 @@ router.post('/getPlan/getExerciseData', async (req, res) => {
   const payload = req.body ?? {}
   const data = await getExerciseData(payload)
   return ok(res, data)
+})
+
+// 保存原始 DOCX 文件（导入时保留原件用于高保真导出）。
+router.post('/getPlan/saveOriginalFile', upload.single('file'), async (req, res) => {
+  try {
+    const file = req.file
+    if (!file) return fail(res, '缺少文件', 400)
+    const id = req.body?.id
+    if (!id) return fail(res, '缺少文档id', 400)
+
+    const plan = await prisma.trainingPerformance.findUnique({ where: { id } })
+    if (!plan) return fail(res, '文档不存在', 404)
+
+    const rawUserId = (req as any).auth?.userId
+    const record = await uploadFile(file, rawUserId != null ? String(rawUserId) : undefined, plan.originalFileId ?? undefined)
+
+    await prisma.trainingPerformance.update({
+      where: { id },
+      data: { originalFileId: record.id }
+    })
+
+    return ok(res, { fileId: record.id })
+  } catch (err: any) {
+    return fail(res, err.message || '保存原始文件失败')
+  }
+})
+
+// 获取原始 DOCX 文件流。
+router.get('/getPlan/getOriginalFile', async (req, res) => {
+  try {
+    const id = String(req.query.id ?? '')
+    if (!id) return fail(res, '缺少id', 400)
+
+    const plan = await prisma.trainingPerformance.findUnique({ where: { id } })
+    if (!plan?.originalFileId) {
+      res.status(204).end()
+      return
+    }
+
+    const streamInfo = await getFileStream(plan.originalFileId)
+    if (!streamInfo) return fail(res, '原始文件不存在', 404)
+
+    res.setHeader('Content-Type', streamInfo.file.mimeType)
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(streamInfo.file.originalName)}"`)
+    streamInfo.stream.pipe(res)
+  } catch (err: any) {
+    return fail(res, err.message || '获取原始文件失败')
+  }
+})
+
+// 保存/更新文档元数据。
+router.post('/getPlan/saveDocMeta', async (req, res) => {
+  try {
+    const { documentId, metadata } = req.body ?? {}
+    if (!documentId || !metadata) return fail(res, '缺少 documentId 或 metadata', 400)
+
+    const record = await prisma.documentMetadata.upsert({
+      where: { documentId },
+      create: {
+        documentId,
+        paperWidth: metadata.paperSize?.width,
+        paperHeight: metadata.paperSize?.height,
+        marginTop: metadata.margins?.top,
+        marginBottom: metadata.margins?.bottom,
+        marginLeft: metadata.margins?.left,
+        marginRight: metadata.margins?.right,
+        defaultFont: metadata.defaultFont,
+        defaultFontSize: metadata.defaultFontSize,
+        headersJson: metadata.headers ? JSON.stringify(metadata.headers) : undefined,
+        footersJson: metadata.footers ? JSON.stringify(metadata.footers) : undefined,
+        sectionsJson: metadata.sections ? JSON.stringify(metadata.sections) : undefined,
+        numberingJson: metadata.numberingDefinitions ? JSON.stringify(metadata.numberingDefinitions) : undefined,
+        stylesJson: metadata.customStyles ? JSON.stringify(metadata.customStyles) : undefined,
+      },
+      update: {
+        paperWidth: metadata.paperSize?.width,
+        paperHeight: metadata.paperSize?.height,
+        marginTop: metadata.margins?.top,
+        marginBottom: metadata.margins?.bottom,
+        marginLeft: metadata.margins?.left,
+        marginRight: metadata.margins?.right,
+        defaultFont: metadata.defaultFont,
+        defaultFontSize: metadata.defaultFontSize,
+        headersJson: metadata.headers ? JSON.stringify(metadata.headers) : undefined,
+        footersJson: metadata.footers ? JSON.stringify(metadata.footers) : undefined,
+        sectionsJson: metadata.sections ? JSON.stringify(metadata.sections) : undefined,
+        numberingJson: metadata.numberingDefinitions ? JSON.stringify(metadata.numberingDefinitions) : undefined,
+        stylesJson: metadata.customStyles ? JSON.stringify(metadata.customStyles) : undefined,
+      },
+    })
+
+    await prisma.trainingPerformance.update({
+      where: { id: documentId },
+      data: { docMetadataId: record.id }
+    }).catch(() => {
+      // documentId 可能不在 trainingPerformance 表中（如模板），忽略
+    })
+
+    return ok(res, { id: record.id })
+  } catch (err: any) {
+    return fail(res, err.message || '保存元数据失败')
+  }
+})
+
+// 获取文档元数据。
+router.get('/getPlan/getDocMeta', async (req, res) => {
+  try {
+    const documentId = String(req.query.documentId ?? '')
+    if (!documentId) return fail(res, '缺少 documentId', 400)
+
+    const record = await prisma.documentMetadata.findUnique({ where: { documentId } })
+    if (!record) {
+      res.status(204).end()
+      return
+    }
+
+    const metadata = {
+      paperSize: record.paperWidth != null ? { width: record.paperWidth, height: record.paperHeight } : undefined,
+      margins: record.marginTop != null ? {
+        top: record.marginTop, bottom: record.marginBottom,
+        left: record.marginLeft, right: record.marginRight
+      } : undefined,
+      defaultFont: record.defaultFont,
+      defaultFontSize: record.defaultFontSize,
+      headers: record.headersJson ? JSON.parse(record.headersJson) : undefined,
+      footers: record.footersJson ? JSON.parse(record.footersJson) : undefined,
+      sections: record.sectionsJson ? JSON.parse(record.sectionsJson) : undefined,
+      numberingDefinitions: record.numberingJson ? JSON.parse(record.numberingJson) : undefined,
+      customStyles: record.stylesJson ? JSON.parse(record.stylesJson) : undefined,
+    }
+
+    return ok(res, metadata)
+  } catch (err: any) {
+    return fail(res, err.message || '获取元数据失败')
+  }
 })
 
 export default router
