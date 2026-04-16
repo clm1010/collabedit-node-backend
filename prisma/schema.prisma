@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // ===================== 系统管理模型 =====================
@@ -423,6 +423,9 @@ model DocumentMetadata {
   sectionsJson    String?  @map("sections_json") @db.Text
   numberingJson   String?  @map("numbering_json") @db.Text
   stylesJson      String?  @map("styles_json") @db.Text
+  isRedHead       Boolean? @map("is_red_head")
+  hasFootnotes    Boolean? @map("has_footnotes")
+  hasEndnotes     Boolean? @map("has_endnotes")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

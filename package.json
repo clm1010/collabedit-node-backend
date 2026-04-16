@@ -14,11 +14,13 @@
     "cleanup:minio": "tsx src/scripts/cleanup-minio.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.2",
+    "@prisma/adapter-mariadb": "7.7.0",
+    "@prisma/client": "7.7.0",
     "cors": "latest",
     "dotenv": "latest",
     "express": "latest",
     "jsonwebtoken": "latest",
+    "mariadb": "3.5.2",
     "minio": "latest",
     "morgan": "latest",
     "multer": "latest",
@@ -31,7 +33,7 @@
     "@types/morgan": "latest",
     "@types/multer": "latest",
     "@types/node": "latest",
-    "prisma": "^6.19.2",
+    "prisma": "7.7.0",
     "tsx": "latest",
     "typescript": "latest"
   }

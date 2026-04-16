@@ -1,5 +1,8 @@
 # compiled output
 /dist
+
+# Prisma 7 generated client (regenerate with pnpm prisma:generate)
+/src/generated/prisma
 /node_modules
 /.pnp
 .pnp.js

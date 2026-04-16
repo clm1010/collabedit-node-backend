@@ -261,6 +261,9 @@ router.post('/getPlan/saveDocMeta', async (req, res) => {
         sectionsJson: metadata.sections ? JSON.stringify(metadata.sections) : undefined,
         numberingJson: metadata.numberingDefinitions ? JSON.stringify(metadata.numberingDefinitions) : undefined,
         stylesJson: metadata.customStyles ? JSON.stringify(metadata.customStyles) : undefined,
+        isRedHead: metadata.isRedHead ?? undefined,
+        hasFootnotes: metadata.hasFootnotes ?? undefined,
+        hasEndnotes: metadata.hasEndnotes ?? undefined,
       },
       update: {
         paperWidth: metadata.paperSize?.width,
@@ -276,6 +279,9 @@ router.post('/getPlan/saveDocMeta', async (req, res) => {
         sectionsJson: metadata.sections ? JSON.stringify(metadata.sections) : undefined,
         numberingJson: metadata.numberingDefinitions ? JSON.stringify(metadata.numberingDefinitions) : undefined,
         stylesJson: metadata.customStyles ? JSON.stringify(metadata.customStyles) : undefined,
+        isRedHead: metadata.isRedHead ?? undefined,
+        hasFootnotes: metadata.hasFootnotes ?? undefined,
+        hasEndnotes: metadata.hasEndnotes ?? undefined,
       },
     })
 
@@ -317,6 +323,9 @@ router.get('/getPlan/getDocMeta', async (req, res) => {
       sections: record.sectionsJson ? JSON.parse(record.sectionsJson) : undefined,
       numberingDefinitions: record.numberingJson ? JSON.parse(record.numberingJson) : undefined,
       customStyles: record.stylesJson ? JSON.parse(record.stylesJson) : undefined,
+      isRedHead: record.isRedHead ?? undefined,
+      hasFootnotes: record.hasFootnotes ?? undefined,
+      hasEndnotes: record.hasEndnotes ?? undefined,
     }
 
     return ok(res, metadata)
