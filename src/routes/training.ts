@@ -215,6 +215,23 @@ router.post('/getPlan/saveOriginalFile', upload.single('file'), async (req, res)
   }
 })
 
+// 仅检查是否存在原始 DOCX，供前端在首屏补传 originalFile 前做判断。
+// 与 getOriginalFile 分离，避免"判断存在性"却整体下载大文件。
+router.get('/getPlan/hasOriginalFile', async (req, res) => {
+  try {
+    const id = String(req.query.id ?? '')
+    if (!id) return fail(res, '缺少id', 400)
+    const plan = await prisma.trainingPerformance.findUnique({
+      where: { id },
+      select: { originalFileId: true }
+    })
+    if (!plan) return fail(res, '文档不存在', 404)
+    return ok(res, { hasOriginalFile: !!plan.originalFileId })
+  } catch (err: any) {
+    return fail(res, err.message || '查询原始文件状态失败')
+  }
+})
+
 // 获取原始 DOCX 文件流。
 router.get('/getPlan/getOriginalFile', async (req, res) => {
   try {
